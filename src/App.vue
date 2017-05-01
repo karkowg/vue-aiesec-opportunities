@@ -1,18 +1,24 @@
 <template lang="html">
   <div id="app">
     <div class="header">
-      <h3>vue-aiesec-opportunities (gt)</h3>
-      <span>opportunities: {{ opportunities.length }}</span>
+      <h3>vue-aiesec-opportunities</h3>
     </div>
     <div class="filters">
-      <h4>static filters applied:</h4>
-      <h4><a href="#" @click="toggleBackgrounds">--backgrounds ({{ showBackgrounds ? '-' : '+'}})</a></h4>
+      <div class="counter">
+        <span>static-filters:</span>
+        <span>total: {{ opportunities.length }}</span>
+      </div>
+      <h4><a href="#" @click="toggleBackgrounds">--backgrounds ({{ showBackgrounds ? '-' : '+' }})</a></h4>
       <div class="filter" v-if="showBackgrounds">
         <span class="filter-item" v-for="background in filteredBackgrounds(apiBackgrounds)">{{ background.text }};</span>
       </div>
-      <h4><a href="#" @click="toggleMcs">--mcs ({{ showMcs ? '-' : '+'}})</a></h4>
+      <h4><a href="#" @click="toggleMcs">--mcs ({{ showMcs ? '-' : '+' }})</a></h4>
       <div class="filter" v-if="showMcs">
         <span class="filter-item" v-for="mc in filteredMcs(apiMcs)">{{ mc.text }};</span>
+      </div>
+      <h4><a href="#" @click="toggleProgrammes">--programmes ({{ showProgrammes ? '-' : '+' }})</a></h4>
+      <div class="filter" v-if="showProgrammes">
+        <span class="filter-item" v-for="prog in filteredProgrammes(apiProgrammes)">{{ prog.consumer_name }};</span>
       </div>
     </div>
     <div v-if="!hasData" class="loading">Loading ...</div>
@@ -21,6 +27,9 @@
         <opportunity :opportunity="opp"></opportunity>
       </li>
     </ul>
+    <div class="footer">
+      <span>by: { dev: <a href="//karkowg.github.io" target="_blank">karkowg</a> }</span>
+    </div>
   </div>
 </template>
 
@@ -29,6 +38,7 @@ import axios from 'axios'
 import backgrounds from './config/backgrounds.js'
 import filters from './config/filters.js'
 import mcs from './config/mcs.js'
+import programmes from './config/programmes.js'
 import Opportunity from './components/Opportunity'
 
 export default {
@@ -42,8 +52,10 @@ export default {
       baseUrl: '//gis-api.aiesec.org/v2/opportunities.json?only=data&per_page=250',
       apiBackgrounds: backgrounds.all,
       apiMcs: mcs.all,
+      apiProgrammes: programmes.all,
       showBackgrounds: false,
-      showMcs: false
+      showMcs: false,
+      showProgrammes: false
     }
   },
   computed: {
@@ -96,11 +108,17 @@ export default {
     filteredMcs (mcs) {
       return mcs.filter(mc => filters.mcs.indexOf(mc.id) > -1)
     },
+    filteredProgrammes (programmes) {
+      return programmes.filter(prog => filters.programmes.indexOf(prog.id) > -1)
+    },
     toggleBackgrounds () {
       this.showBackgrounds = !this.showBackgrounds
     },
     toggleMcs () {
       this.showMcs = !this.showMcs
+    },
+    toggleProgrammes () {
+      this.showProgrammes = !this.showProgrammes
     }
   },
   created () {
@@ -131,14 +149,13 @@ body {
   color: #2c3e50;
   font-family: monospace;
   min-height: 98vh;
-  padding: 16px 0;
+  padding: 8px 0 16px;
 
   .header {
     color: #fff;
-    display: inline-flex;
-    justify-content: space-around;
+    display: flex;
+    justify-content: center;
     padding: 8px 16px 0;
-    width: 100%;
   }
 
   .loading {
@@ -153,6 +170,11 @@ body {
   .filters {
     color: #fff;
     padding: 16px 16px 0;
+
+    .counter {
+      display: flex;
+      justify-content: space-between;
+    }
 
     .filter {
       display: inline-block;
@@ -177,7 +199,7 @@ body {
       border-radius: 4px;
       box-shadow: 3px -3px 1px 0px #888888;
       display: flex;
-      flex: 0 1 260px;
+      flex: 0 1 280px;
       height: 172px;
       margin-right: 6px;
       margin-top: 12px;
@@ -185,6 +207,13 @@ body {
       padding: 8px;
       white-space: nowrap;
     }
+  }
+
+  .footer {
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    padding: 16px 16px 0;
   }
 }
 </style>
