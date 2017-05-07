@@ -205,7 +205,7 @@ body {
       align-items: center;
       color: #fff;
       display: flex;
-      font-size: 2em;
+      font-size: 1.4em;
       justify-content: center;
     }
 
