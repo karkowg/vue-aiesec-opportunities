@@ -5,28 +5,25 @@
     </div>
     <div class="filters">
       <div class="counter">
-        <span>static-filters:</span>
+        <span>--filters (<a id="apply-filters" @click="fetchOpportunities">apply</a>)</span>
         <span>total: {{ opportunities.length }}</span>
       </div>
-      <h4><a href="#" @click="toggleBackgrounds">--backgrounds ({{ showBackgrounds ? '-' : '+' }})</a></h4>
-      <div class="filter" v-if="showBackgrounds">
-        <span class="filter-item" v-for="background in filteredBackgrounds(apiBackgrounds)">{{ background.text }};</span>
-      </div>
-      <h4><a href="#" @click="toggleMcs">--mcs ({{ showMcs ? '-' : '+' }})</a></h4>
-      <div class="filter" v-if="showMcs">
-        <span class="filter-item" v-for="mc in filteredMcs(apiMcs)">{{ mc.text }};</span>
-      </div>
-      <h4><a href="#" @click="toggleProgrammes">--programmes ({{ showProgrammes ? '-' : '+' }})</a></h4>
-      <div class="filter" v-if="showProgrammes">
-        <span class="filter-item" v-for="prog in filteredProgrammes(apiProgrammes)">{{ prog.consumer_name }};</span>
+      <div class="selects">
+        <multiselect v-model="filters.bgValues" :options="bgOptions" :limit="1" :multiple="true" :close-on-select="false" :max-height="200" placeholder="backgrounds" label="text" track-by="id"></multiselect>
+        <multiselect v-model="filters.mcValues" :options="mcOptions" :limit="1" :multiple="true" :close-on-select="false" :max-height="200" placeholder="mcs" label="text" track-by="id"></multiselect>
+        <multiselect v-model="filters.prValues" :options="prOptions" :limit="1" :multiple="true" :close-on-select="false" :max-height="200" placeholder="programmes" label="consumer_name" track-by="id"></multiselect>
       </div>
     </div>
-    <div v-if="!hasData" class="loading">Loading ...</div>
-    <ul class="opportunities">
-      <li class="opportunity-item" v-for="opp in opportunities" :key="opp.id" :style="{ order: flexDescOrder(opp.id) }">
-        <opportunity :opportunity="opp"></opportunity>
-      </li>
-    </ul>
+    <div class="content">
+      <div v-show="!hasData" class="loading">
+        {{ loading ? 'loading ...' : '~ no opportunities found ~' }}
+      </div>
+      <ul class="opportunities">
+        <li class="opportunity-item" v-for="opp in opportunities" :key="opp.id" :style="{ order: flexDescOrder(opp.id) }">
+          <opportunity :opportunity="opp"></opportunity>
+        </li>
+      </ul>
+    </div>
     <div class="footer">
       <span>by: { dev: <a href="//karkowg.github.io" target="_blank">karkowg</a> }</span>
     </div>
@@ -36,50 +33,57 @@
 <script>
 import axios from 'axios'
 import backgrounds from './config/backgrounds.js'
-import filters from './config/filters.js'
 import mcs from './config/mcs.js'
 import programmes from './config/programmes.js'
+import Multiselect from 'vue-multiselect'
 import Opportunity from './components/Opportunity'
 
 export default {
   name: 'app',
   components: {
+    Multiselect,
     Opportunity
   },
   data () {
     return {
-      opportunities: [],
-      baseUrl: '//gis-api.aiesec.org/v2/opportunities.json?only=data&per_page=250',
-      apiBackgrounds: backgrounds.all,
-      apiMcs: mcs.all,
-      apiProgrammes: programmes.all,
-      showBackgrounds: false,
-      showMcs: false,
-      showProgrammes: false
+      auth: {
+        token: 'e316ebe109dd84ed16734e5161a2d236d0a7e6daf499941f7c110078e3c75493'
+      },
+      baseUrl: '//gis-api.aiesec.org/v2/opportunities.json?only=data&per_page=300',
+      filters: {
+        bgValues: [],
+        mcValues: [],
+        prValues: []
+      },
+      bgOptions: backgrounds.all,
+      mcOptions: mcs.all,
+      prOptions: programmes.all,
+      loading: false,
+      opportunities: []
     }
   },
   computed: {
     token () {
-      return `&access_token=${filters.token}`
+      return `&access_token=${this.auth.token}`
     },
     mcs () {
       let query = ''
-      filters.mcs.forEach(mc => {
-        query += `&filters[home_mcs][]=${mc}`
+      this.filters.mcValues.forEach(mc => {
+        query += `&filters[home_mcs][]=${mc.id}`
       })
       return query
     },
     backgrounds () {
       let query = ''
-      filters.backgrounds.forEach(background => {
-        query += `&filters[backgrounds][][id]=${background}`
+      this.filters.bgValues.forEach(background => {
+        query += `&filters[backgrounds][][id]=${background.id}`
       })
       return query
     },
     programmes () {
       let query = ''
-      filters.programmes.forEach(prog => {
-        query += `&filters[programmes][]=${prog}`
+      this.filters.prValues.forEach(prog => {
+        query += `&filters[programmes][]=${prog.id}`
       })
       return query
     },
@@ -88,44 +92,46 @@ export default {
     },
     hasData () {
       return !!this.opportunities.length
+    },
+    hasFilter () {
+      return (this.filters.bgValues.length + this.filters.mcValues.length + this.filters.prValues.length) > 1
     }
   },
   methods: {
     fetchOpportunities () {
       let vm = this
-      axios.get(this.opportunitiesUrl).then(response => {
-        response.status === 200 && (vm.opportunities = response.data.data)
-      })
+      if (vm.hasFilter) {
+        vm.setOpportunities([])
+        vm.setLoading(true)
+
+        let prom = axios.get(this.opportunitiesUrl)
+
+        setTimeout(() => {
+          prom.then(response => {
+            if (response.status === 200) {
+              vm.setLoading(false)
+              !!response.data.data.length && vm.setOpportunities(response.data.data)
+            }
+          })
+        }, 800)
+      } else {
+        alert('Apply at least two filters, please (:')
+      }
+    },
+    setOpportunities (opportunities) {
+      this.opportunities = opportunities
+    },
+    setLoading (state) {
+      this.loading = state
     },
     flexDescOrder (id) {
       return 9999999 - id
-    },
-    filteredBackgrounds (backgrounds) {
-      return backgrounds.filter(background => {
-        return filters.backgrounds.indexOf(background.id) > -1
-      })
-    },
-    filteredMcs (mcs) {
-      return mcs.filter(mc => filters.mcs.indexOf(mc.id) > -1)
-    },
-    filteredProgrammes (programmes) {
-      return programmes.filter(prog => filters.programmes.indexOf(prog.id) > -1)
-    },
-    toggleBackgrounds () {
-      this.showBackgrounds = !this.showBackgrounds
-    },
-    toggleMcs () {
-      this.showMcs = !this.showMcs
-    },
-    toggleProgrammes () {
-      this.showProgrammes = !this.showProgrammes
     }
-  },
-  created () {
-    this.fetchOpportunities()
   }
 }
 </script>
+
+<style src="vue-multiselect/dist/vue-multiselect.min.css"></style>
 
 <style lang="scss">
 * {
@@ -158,54 +164,71 @@ body {
     padding: 8px 16px 0;
   }
 
-  .loading {
-    align-items: center;
-    color: #fff;
-    display: flex;
-    font-size: 2em;
-    height: 70vh;
-    justify-content: center;
-  }
-
   .filters {
     color: #fff;
     padding: 16px 16px 0;
+
+    #apply-filters {
+      cursor: pointer;
+    }
 
     .counter {
       display: flex;
       justify-content: space-between;
     }
 
-    .filter {
-      display: inline-block;
-      word-break: break-all;
-    }
+    .selects {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
 
-    .filter-item {
-      margin-left: 8px;
+      .multiselect {
+        margin-top: 4px;
+      }
+
+      @media screen and (min-width: 480px) {
+        .multiselect {
+          width: 33%;
+        }
+      }
     }
   }
 
-  .opportunities {
+  .content {
     display: flex;
-    flex-wrap: wrap;
-    justify-content: space-around;
+    flex-direction: column;
     padding: 16px 16px 0;
-    width: 100%;
+    justify-content: center;
+    min-height: 75vh;
 
-    .opportunity-item {
+    .loading {
       align-items: center;
-      background: #d5eaea;
-      border-radius: 4px;
-      box-shadow: 3px -3px 1px 0px #888888;
+      color: #fff;
       display: flex;
-      flex: 0 1 280px;
-      height: 172px;
-      margin-right: 6px;
-      margin-top: 12px;
-      overflow: hidden;
-      padding: 8px;
-      white-space: nowrap;
+      font-size: 2em;
+      justify-content: center;
+    }
+
+    .opportunities {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+      width: 100%;
+
+      .opportunity-item {
+        align-items: center;
+        background: #d5eaea;
+        border-radius: 4px;
+        box-shadow: 3px -3px 1px 0px #888888;
+        display: flex;
+        flex: 0 1 280px;
+        height: 172px;
+        margin-right: 6px;
+        margin-top: 12px;
+        overflow: hidden;
+        padding: 8px;
+        white-space: nowrap;
+      }
     }
   }
 

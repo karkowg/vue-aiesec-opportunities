@@ -1,6 +1,6 @@
 <template lang="html">
   <ul class="opportunity">
-    <li>id: {{ opportunity.id }}</li>
+    <li>id: {{ opportunity.id }} ({{ opportunity.programmes.short_name }})</li>
     <li>title: {{ opportunity.title }}</li>
     <li>org: {{ opportunity.branch.name }}</li>
     <li>location: {{ opportunity.location }}</li>

@@ -1,7 +1,7 @@
 {
   "name": "vue-aiesec-opportunities",
   "version": "1.0.0",
-  "description": "Simplified AIESEC's opportunity portal in Vue.js",
+  "description": "Minimalist version of AIESEC Opportunities Portal in Vue.js",
   "author": "Gustavo Karkow",
   "private": true,
   "scripts": {
@@ -15,7 +15,8 @@
     "deploy": "git subtree push --prefix dist heroku master"
   },
   "dependencies": {
-    "vue": "^2.2.6"
+    "vue": "^2.2.6",
+    "vue-multiselect": "next"
   },
   "devDependencies": {
     "autoprefixer": "^6.7.2",

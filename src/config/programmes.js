@@ -11,6 +11,7 @@ export default {
     'consumer_name': 'Global Talent',
     'description': 'Jumpstart your career by embarking on a professional internship abroad.'
   },
+  /*
   {
     'id': 3,
     'short_name': 'TMP',
@@ -23,6 +24,7 @@ export default {
     'consumer_name': 'Join in Campus',
     'description': "AIESEC is run by youth for youth, and we're looking for students who want to contribute to our vision."
   },
+  */
   {
     'id': 5,
     'short_name': 'GE',
