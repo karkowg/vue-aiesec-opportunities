@@ -5,13 +5,45 @@
     </div>
     <div class="filters">
       <div class="counter">
-        <span>--filters (<a id="apply-filters" @click="fetchOpportunities">apply</a>)</span>
+        <span>
+          --filters (<a id="apply-filters" @click="loadOpportunities">apply</a>)
+        </span>
         <span>total: {{ opportunities.length }}</span>
       </div>
       <div class="selects">
-        <multiselect v-model="filters.bgValues" :options="bgOptions" :limit="1" :multiple="true" :close-on-select="false" :max-height="200" placeholder="backgrounds" label="text" track-by="id"></multiselect>
-        <multiselect v-model="filters.mcValues" :options="mcOptions" :limit="1" :multiple="true" :close-on-select="false" :max-height="200" placeholder="mcs" label="text" track-by="id"></multiselect>
-        <multiselect v-model="filters.prValues" :options="prOptions" :limit="1" :multiple="true" :close-on-select="false" :max-height="200" placeholder="programmes" label="consumer_name" track-by="id"></multiselect>
+        <multiselect v-model="filters.bgValues"
+          :block-keys="['Tab']"
+          :close-on-select="false"
+          :limit="1"
+          :max-height="200"
+          :multiple="true"
+          :options="filters.bgOptions"
+          label="text"
+          placeholder="backgrounds"
+          track-by="id">
+        </multiselect>
+        <multiselect v-model="filters.mcValues"
+          :block-keys="['Tab']"
+          :close-on-select="false"
+          :limit="1"
+          :max-height="200"
+          :multiple="true"
+          :options="filters.mcOptions"
+          label="text"
+          placeholder="mcs"
+          track-by="id">
+        </multiselect>
+        <multiselect v-model="filters.prValues"
+          :block-keys="['Tab']"
+          :close-on-select="false"
+          :limit="1"
+          :max-height="200"
+          :multiple="true"
+          :options="filters.prOptions"
+          label="consumer_name"
+          placeholder="programmes"
+          track-by="id">
+        </multiselect>
       </div>
     </div>
     <div class="content">
@@ -19,19 +51,23 @@
         {{ loading ? 'loading ...' : '~ no opportunities found ~' }}
       </div>
       <ul class="opportunities">
-        <li class="opportunity-item" v-for="opp in opportunities" :key="opp.id" :style="{ order: flexDescOrder(opp.id) }">
+        <li class="opportunity-item"
+          :key="opp.id"
+          :style="{ order: getFlexDescOrder(opp.id) }"
+          v-for="opp in opportunities">
           <opportunity :opportunity="opp"></opportunity>
         </li>
       </ul>
     </div>
     <div class="footer">
-      <span>by: { dev: <a href="//karkowg.github.io" target="_blank">karkowg</a> }</span>
+      <span>
+        by: { dev: <a href="//karkowg.github.io" target="_blank">karkowg</a> }
+      </span>
     </div>
   </div>
 </template>
 
 <script>
-import axios from 'axios'
 import backgrounds from './config/backgrounds.js'
 import mcs from './config/mcs.js'
 import programmes from './config/programmes.js'
@@ -53,11 +89,11 @@ export default {
       filters: {
         bgValues: [],
         mcValues: [],
-        prValues: []
+        prValues: [],
+        bgOptions: backgrounds.all,
+        mcOptions: mcs.all,
+        prOptions: programmes.all
       },
-      bgOptions: backgrounds.all,
-      mcOptions: mcs.all,
-      prOptions: programmes.all,
       loading: false,
       opportunities: []
     }
@@ -98,22 +134,28 @@ export default {
     }
   },
   methods: {
-    fetchOpportunities () {
+    async fetchOpportunities (url) {
+      const response = await fetch(url)
+      const body = await response.json()
+
+      if (response.status !== 200) {
+        throw Error(`fetchOpportunities: ${body.error}`)
+      }
+
+      return body.data
+    },
+    loadOpportunities () {
       let vm = this
       if (vm.hasFilter) {
         vm.setOpportunities([])
         vm.setLoading(true)
 
-        let prom = axios.get(this.opportunitiesUrl)
-
-        setTimeout(() => {
-          prom.then(response => {
-            if (response.status === 200) {
-              vm.setLoading(false)
-              !!response.data.data.length && vm.setOpportunities(response.data.data)
-            }
+        vm.fetchOpportunities(this.opportunitiesUrl)
+          .then(opportunities => {
+            vm.setLoading(false)
+            !!opportunities.length && vm.setOpportunities(opportunities)
           })
-        }, 800)
+          .catch(err => console.error(err))
       } else {
         alert('Apply at least two filters, please (:')
       }
@@ -124,7 +166,7 @@ export default {
     setLoading (state) {
       this.loading = state
     },
-    flexDescOrder (id) {
+    getFlexDescOrder (id) {
       return 9999999 - id
     }
   }
@@ -221,8 +263,8 @@ body {
         border-radius: 4px;
         box-shadow: 3px -3px 1px 0px #888888;
         display: flex;
-        flex: 0 1 280px;
-        height: 172px;
+        flex: 0 1 300px;
+        height: 176px;
         margin-right: 6px;
         margin-top: 12px;
         overflow: hidden;

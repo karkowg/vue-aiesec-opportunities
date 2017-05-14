@@ -2,7 +2,11 @@
   "name": "vue-aiesec-opportunities",
   "version": "1.0.0",
   "description": "Minimalist version of AIESEC Opportunities Portal in Vue.js",
-  "author": "Gustavo Karkow",
+  "keywords": [
+    "vue",
+    "aiesec"
+  ],
+  "author": "Gustavo Karkow <karkowg@gmail.com>",
   "private": true,
   "scripts": {
     "dev": "node build/dev-server.js",
@@ -20,7 +24,6 @@
   },
   "devDependencies": {
     "autoprefixer": "^6.7.2",
-    "axios": "^0.16.1",
     "babel-core": "^6.22.1",
     "babel-eslint": "^7.1.1",
     "babel-loader": "^6.2.10",
